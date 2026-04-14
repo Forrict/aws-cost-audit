@@ -1,0 +1,169 @@
+checks:
+  - id: ec2_unused
+    name: Unused EC2 Instances
+    description: >
+      Identifies running EC2 instances with average CPU utilization below 10% over
+      the past 14 days. Low CPU is a strong indicator that the instance is idle or
+      significantly over-provisioned for its workload.
+    why_it_matters: >
+      EC2 instances incur hourly charges regardless of utilization. Idle instances
+      waste budget without delivering value. Even a single unused m5.large costs
+      ~$70/month.
+    typical_savings: "$50–$500/month per idle instance depending on instance type"
+
+  - id: ebs_unattached
+    name: Unattached EBS Volumes
+    description: >
+      Finds EBS volumes in "available" state — volumes that exist but are not
+      attached to any EC2 instance. These are created when instances are terminated
+      without deleting their storage.
+    why_it_matters: >
+      Unattached EBS volumes still incur storage charges ($0.08–$0.10/GB/month for
+      gp2/gp3). They accumulate silently after instance terminations.
+    typical_savings: "$5–$50/month per unattached volume"
+
+  - id: ebs_old_snapshots
+    name: Old EBS Snapshots
+    description: >
+      Lists EBS snapshots older than 90 days owned by your account. Old snapshots
+      often outlive their usefulness, especially when no corresponding volume or
+      instance exists anymore.
+    why_it_matters: >
+      EBS snapshots are billed at $0.05/GB/month. Hundreds of stale snapshots from
+      automated backups or manual experiments accumulate unnoticed.
+    typical_savings: "$10–$200/month depending on snapshot volume"
+
+  - id: elb_idle
+    name: Idle Load Balancers
+    description: >
+      Detects Application Load Balancers and Network Load Balancers with no healthy
+      targets or zero request traffic over the past 7 days. These typically represent
+      forgotten infrastructure from retired services.
+    why_it_matters: >
+      Each ALB costs ~$16–$20/month in fixed hourly charges even with zero traffic.
+      NLBs cost similarly. Idle LBs provide no value while consuming budget.
+    typical_savings: "$16–$40/month per idle load balancer"
+
+  - id: eip_unattached
+    name: Unattached Elastic IPs
+    description: >
+      Finds Elastic IP addresses that are allocated but not associated with a running
+      EC2 instance or NAT Gateway. AWS charges for EIPs that are not in use.
+    why_it_matters: >
+      AWS charges ~$0.005/hour (~$3.60/month) for each unattached EIP. While small
+      individually, organizations often accumulate many forgotten EIPs.
+    typical_savings: "$3–$36/month per unattached EIP"
+
+  - id: ec2_rightsizing
+    name: Oversized EC2 Instances
+    description: >
+      Identifies running EC2 instances with average CPU below 20% over 14 days as
+      candidates for downsizing. These instances may be over-provisioned relative to
+      their actual workload demands.
+    why_it_matters: >
+      Right-sizing is one of the highest-ROI FinOps actions. Moving from an m5.2xlarge
+      to an m5.xlarge halves compute cost with no architecture change. Savings of
+      30–60% are typical.
+    typical_savings: "30–60% of instance cost per right-sized resource"
+
+  - id: ri_coverage
+    name: RI / Savings Plan Coverage
+    description: >
+      Measures the percentage of eligible compute spend covered by Reserved Instances
+      or Savings Plans over the past 30 days. Low coverage means you are paying
+      full On-Demand prices for predictable workloads.
+    why_it_matters: >
+      On-Demand pricing carries a 40–72% premium over Reserved Instances and Savings
+      Plans for steady-state workloads. This is often the single largest optimization
+      opportunity for mature AWS environments.
+    typical_savings: "30–72% of covered compute spend"
+
+  - id: s3_lifecycle
+    name: S3 Lifecycle Policies
+    description: >
+      Checks whether each S3 bucket has a lifecycle configuration that transitions
+      objects to cheaper storage classes (S3 Infrequent Access, Glacier) or expires
+      old objects automatically.
+    why_it_matters: >
+      Without lifecycle policies, S3 objects accumulate indefinitely at S3 Standard
+      pricing. Transitioning infrequently accessed data to S3-IA saves 45%; Glacier
+      saves up to 90%.
+    typical_savings: "20–90% of S3 storage costs on aged data"
+
+  - id: nat_gateway_unused
+    name: Unused NAT Gateways
+    description: >
+      Identifies NAT Gateways with zero outbound bytes over the past 7 days. These
+      are likely leftover from decommissioned workloads in private subnets.
+    why_it_matters: >
+      Each NAT Gateway costs $0.045/hour (~$32/month) plus $0.045/GB of data
+      processed. Idle ones deliver no value.
+    typical_savings: "$32–$100/month per idle NAT Gateway"
+
+  - id: cloudwatch_log_retention
+    name: CloudWatch Log Retention
+    description: >
+      Finds CloudWatch log groups with no retention policy set, meaning logs are
+      retained indefinitely. Every Lambda invocation, VPC flow, and container log
+      creates entries that grow without bound.
+    why_it_matters: >
+      CloudWatch Logs storage costs $0.03/GB/month. Without retention policies,
+      high-volume log groups (e.g. Lambda, ECS) can silently accumulate tens or
+      hundreds of GBs.
+    typical_savings: "$10–$500/month depending on log volume"
+
+  - id: rds_idle
+    name: Idle RDS Instances
+    description: >
+      Identifies RDS database instances with fewer than 1 average connection over
+      14 days. Databases with no active connections are almost certainly unused.
+    why_it_matters: >
+      RDS instances are billed by instance hour regardless of load. An idle
+      db.t3.medium costs ~$50/month; larger instances cost hundreds.
+    typical_savings: "$50–$500/month per idle RDS instance"
+
+  - id: ec2_previous_gen
+    name: Previous-Generation Instance Types
+    description: >
+      Detects EC2 instances running on previous-generation families (t1, m1, m2, m3,
+      c1, c3, r3, i2, g2, etc.) that have been superseded by newer generations with
+      better price-performance.
+    why_it_matters: >
+      Previous-gen instances are often 20–40% more expensive than their current-gen
+      equivalents while providing less performance. AWS no longer optimizes pricing
+      for these types.
+    typical_savings: "20–40% of instance cost per migrated instance"
+
+  - id: lambda_unused
+    name: Unused Lambda Functions
+    description: >
+      Finds Lambda functions with zero invocations over the past 30 days. These
+      functions are dormant and likely candidates for cleanup.
+    why_it_matters: >
+      While Lambda itself is cheap at rest, unused functions carry operational
+      overhead: associated IAM roles, CloudWatch log groups (which do incur costs),
+      and maintenance burden.
+    typical_savings: "Indirect savings from reduced log storage and operational complexity"
+
+  - id: dynamodb_underused
+    name: Underused DynamoDB Tables
+    description: >
+      Identifies provisioned DynamoDB tables using less than 20% of their provisioned
+      read or write capacity over 7 days. These tables are paying for capacity they
+      don't need.
+    why_it_matters: >
+      Provisioned DynamoDB capacity is charged whether used or not. Switching to
+      on-demand billing or reducing provisioned units aligns cost with actual usage.
+    typical_savings: "30–80% of DynamoDB table costs for underused tables"
+
+  - id: cost_allocation_tags
+    name: Cost Allocation Tags
+    description: >
+      Checks EC2 instances, RDS databases, and S3 buckets for the presence of
+      common cost allocation tags (Environment, Project, Owner, CostCenter). Resources
+      without these tags cannot be tracked by team or project in Cost Explorer.
+    why_it_matters: >
+      Without cost allocation tags, it is impossible to attribute cloud spend to
+      teams, products, or cost centers. This creates billing blind spots and prevents
+      effective FinOps governance.
+    typical_savings: "Indirect — enables identification and elimination of orphaned costs"
