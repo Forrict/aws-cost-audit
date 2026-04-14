@@ -36,8 +36,10 @@ def run() -> CheckResult:
         ri_coverages = ri_response.get("CoveragesByTime", [])
         ri_coverage_pct = 0.0
         if ri_coverages:
-            total = ri_coverages[0].get("Total", {})
-            ri_coverage_pct = float(total.get("CoverageHours", {}).get("CoverageHoursPercentage", 0))
+            ri_total = ri_coverages[0].get("Total", {})
+            ri_coverage_pct = float(
+                ri_total.get("CoverageHours", {}).get("CoverageHoursPercentage", 0)  # type: ignore[union-attr]
+            )
     except Exception:
         ri_coverage_pct = None  # type: ignore[assignment]
 
@@ -46,7 +48,11 @@ def run() -> CheckResult:
             check_name="RI / Savings Plan Coverage",
             status=Status.INFO,
             finding="Could not retrieve coverage data from Cost Explorer.",
-            recommendation="Ensure IAM permissions include ce:GetSavingsPlansCoverage and ce:GetReservationCoverage.",
+            recommendation=(
+                "Ensure IAM permissions include"
+                " ce:GetSavingsPlansCoverage and"
+                " ce:GetReservationCoverage."
+            ),
         )
 
     findings = []
@@ -55,7 +61,9 @@ def run() -> CheckResult:
         findings.append(Finding("SavingsPlans", f"{sp_coverage_pct:.1f}% coverage (last 30 days)"))
         worst_pct = min(worst_pct, sp_coverage_pct)
     if ri_coverage_pct is not None:
-        findings.append(Finding("ReservedInstances", f"{ri_coverage_pct:.1f}% coverage (last 30 days)"))
+        findings.append(
+            Finding("ReservedInstances", f"{ri_coverage_pct:.1f}% coverage (last 30 days)")
+        )
         worst_pct = min(worst_pct, ri_coverage_pct)
 
     if worst_pct >= 70:
@@ -63,10 +71,18 @@ def run() -> CheckResult:
         rec = "Coverage looks healthy. Review annually to ensure commitments still match usage."
     elif worst_pct >= 40:
         status = Status.WARN
-        rec = "Consider purchasing additional Reserved Instances or Savings Plans for predictable workloads. Savings of 30–72% over On-Demand."
+        rec = (
+            "Consider purchasing additional Reserved Instances"
+            " or Savings Plans for predictable workloads."
+            " Savings of 30\u201372% over On-Demand."
+        )
     else:
         status = Status.FAIL
-        rec = "Very low commitment coverage. Evaluate Compute Savings Plans for immediate savings of up to 66% with maximum flexibility."
+        rec = (
+            "Very low commitment coverage. Evaluate Compute"
+            " Savings Plans for immediate savings of up to"
+            " 66% with maximum flexibility."
+        )
 
     detail = "; ".join(f"{f.resource_id}: {f.detail}" for f in findings)
     return CheckResult(

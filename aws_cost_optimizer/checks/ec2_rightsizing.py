@@ -1,7 +1,6 @@
 """Check 6: Oversized EC2 instances (right-sizing candidates via CloudWatch)."""
 
 from datetime import datetime, timedelta, timezone
-from typing import List
 
 import boto3
 
@@ -26,10 +25,10 @@ def run() -> CheckResult:
             recommendation="Ensure IAM permissions include ec2:DescribeInstances.",
         )
 
-    instances: List[dict] = []
+    instances: list[dict] = []
     for reservation in response.get("Reservations", []):
         for instance in reservation.get("Instances", []):
-            instances.append(instance)
+            instances.append(instance)  # type: ignore[arg-type]
 
     if not instances:
         return CheckResult(
@@ -41,9 +40,9 @@ def run() -> CheckResult:
 
     end_time = datetime.now(tz=timezone.utc)
     start_time = end_time - timedelta(days=14)
-    oversized: List[Finding] = []
+    oversized: list[Finding] = []
 
-    for instance in instances:
+    for instance in instances:  # type: ignore[assignment]
         instance_id = instance["InstanceId"]
         instance_type = instance["InstanceType"]
         try:
@@ -79,6 +78,9 @@ def run() -> CheckResult:
         check_name="Oversized EC2 Instances",
         status=Status.WARN,
         finding=f"{len(oversized)} instance(s) with avg CPU < {CPU_THRESHOLD}%: {ids}",
-        recommendation="Use AWS Compute Optimizer or downsize to a smaller instance type. Savings of 30–60% are common.",
+        recommendation=(
+            "Use AWS Compute Optimizer or downsize to a smaller"
+            " instance type. Savings of 30\u201360% are common."
+        ),
         findings=oversized,
     )

@@ -6,8 +6,20 @@ from aws_cost_optimizer.models import CheckResult, Finding, Status
 
 # Common previous-gen prefixes (t1, m1, m2, m3, c1, c3, r3, i2, hs1, g2, cr1, cc1, cc2)
 PREVIOUS_GEN_PREFIXES = (
-    "t1.", "m1.", "m2.", "m3.", "c1.", "c3.", "r3.", "i2.", "hs1.",
-    "g2.", "cr1.", "cc1.", "cc2.", "cg1.",
+    "t1.",
+    "m1.",
+    "m2.",
+    "m3.",
+    "c1.",
+    "c3.",
+    "r3.",
+    "i2.",
+    "hs1.",
+    "g2.",
+    "cr1.",
+    "cc1.",
+    "cc2.",
+    "cg1.",
 )
 
 
@@ -32,7 +44,9 @@ def run() -> CheckResult:
             itype = instance["InstanceType"]
             if any(itype.startswith(p) for p in PREVIOUS_GEN_PREFIXES):
                 old_gen.append(
-                    Finding(instance["InstanceId"], f"type: {itype}, state: {instance['State']['Name']}")
+                    Finding(
+                        instance["InstanceId"], f"type: {itype}, state: {instance['State']['Name']}"
+                    )
                 )
 
     if not old_gen:
@@ -48,6 +62,10 @@ def run() -> CheckResult:
         check_name="Previous-Generation Instance Types",
         status=Status.WARN,
         finding=f"{len(old_gen)} instance(s) running on previous-gen types: {ids}",
-        recommendation="Migrate to current-generation equivalents (e.g. m3→m6i, c3→c6i) for better performance at lower cost (typically 20–40% cheaper).",
+        recommendation=(
+            "Migrate to current-generation equivalents"
+            " (e.g. m3\u2192m6i, c3\u2192c6i) for better performance"
+            " at lower cost (typically 20\u201340% cheaper)."
+        ),
         findings=old_gen,
     )

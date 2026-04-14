@@ -1,10 +1,11 @@
 """AWS Cost Optimizer CLI entry point."""
 
+from __future__ import annotations
+
 import argparse
 import sys
-from typing import List
 
-from tabulate import tabulate
+from tabulate import tabulate  # type: ignore[import-untyped]
 
 from aws_cost_optimizer import __version__
 from aws_cost_optimizer.models import CheckResult, Status
@@ -29,10 +30,10 @@ CHECK_MODULES = [
 ]
 
 STATUS_COLORS = {
-    Status.PASS: "\033[92m",   # green
-    Status.WARN: "\033[93m",   # yellow
-    Status.FAIL: "\033[91m",   # red
-    Status.INFO: "\033[94m",   # blue
+    Status.PASS: "\033[92m",  # green
+    Status.WARN: "\033[93m",  # yellow
+    Status.FAIL: "\033[91m",  # red
+    Status.INFO: "\033[94m",  # blue
 }
 RESET = "\033[0m"
 
@@ -43,10 +44,10 @@ def _colorize(text: str, status: Status, use_color: bool) -> str:
     return f"{STATUS_COLORS.get(status, '')}{text}{RESET}"
 
 
-def run_checks(only: List[str] | None = None) -> List[CheckResult]:
+def run_checks(only: list[str] | None = None) -> list[CheckResult]:
     import importlib
 
-    results: List[CheckResult] = []
+    results: list[CheckResult] = []
     for module_name, _ in CHECK_MODULES:
         if only and module_name not in only:
             continue
@@ -68,7 +69,7 @@ def run_checks(only: List[str] | None = None) -> List[CheckResult]:
     return results
 
 
-def print_report(results: List[CheckResult], use_color: bool = True, verbose: bool = False) -> None:
+def print_report(results: list[CheckResult], use_color: bool = True, verbose: bool = False) -> None:
     print()
     rows = []
     for r in results:
@@ -110,21 +111,15 @@ def main() -> None:
         description="Run AWS cost optimization checks against your account.",
     )
     parser.add_argument("--version", action="version", version=f"aws-cost-optimizer {__version__}")
-    parser.add_argument(
-        "--no-color", action="store_true", help="Disable ANSI color output"
-    )
-    parser.add_argument(
-        "--verbose", "-v", action="store_true", help="Show per-resource findings"
-    )
+    parser.add_argument("--no-color", action="store_true", help="Disable ANSI color output")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Show per-resource findings")
     parser.add_argument(
         "--checks",
         nargs="+",
         metavar="CHECK",
         help="Run only specific checks (module names, e.g. ebs_unattached ec2_unused)",
     )
-    parser.add_argument(
-        "--list-checks", action="store_true", help="List available checks and exit"
-    )
+    parser.add_argument("--list-checks", action="store_true", help="List available checks and exit")
     args = parser.parse_args()
 
     if args.list_checks:

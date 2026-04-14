@@ -18,7 +18,9 @@ def run() -> CheckResult:
             check_name="Idle Load Balancers",
             status=Status.INFO,
             finding=f"Could not retrieve load balancers: {e}",
-            recommendation="Ensure IAM permissions include elasticloadbalancing:DescribeLoadBalancers.",
+            recommendation=(
+                "Ensure IAM permissions include elasticloadbalancing:DescribeLoadBalancers."
+            ),
         )
 
     load_balancers = lb_response.get("LoadBalancers", [])
@@ -93,6 +95,8 @@ def run() -> CheckResult:
         check_name="Idle Load Balancers",
         status=Status.WARN,
         finding=f"{len(idle)} idle load balancer(s): {names}",
-        recommendation="Delete idle load balancers to avoid hourly charges (~$16–$20/month per ALB).",
+        recommendation=(
+            "Delete idle load balancers to avoid hourly charges (~$16\u2013$20/month per ALB)."
+        ),
         findings=idle,
     )

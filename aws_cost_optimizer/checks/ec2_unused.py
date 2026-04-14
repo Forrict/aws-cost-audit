@@ -1,7 +1,6 @@
 """Check 1: Unused EC2 instances (low CPU < 10% avg over 14 days)."""
 
 from datetime import datetime, timedelta, timezone
-from typing import List
 
 import boto3
 
@@ -21,10 +20,14 @@ def run() -> CheckResult:
             check_name="Unused EC2 Instances",
             status=Status.INFO,
             finding=f"Could not retrieve EC2 instances: {e}",
-            recommendation="Ensure IAM permissions include ec2:DescribeInstances and cloudwatch:GetMetricStatistics.",
+            recommendation=(
+                "Ensure IAM permissions include"
+                " ec2:DescribeInstances and"
+                " cloudwatch:GetMetricStatistics."
+            ),
         )
 
-    instances: List[str] = []
+    instances: list[str] = []
     for reservation in response.get("Reservations", []):
         for instance in reservation.get("Instances", []):
             instances.append(instance["InstanceId"])
@@ -39,7 +42,7 @@ def run() -> CheckResult:
 
     end_time = datetime.now(tz=timezone.utc)
     start_time = end_time - timedelta(days=14)
-    low_cpu: List[Finding] = []
+    low_cpu: list[Finding] = []
 
     for instance_id in instances:
         try:
@@ -76,6 +79,10 @@ def run() -> CheckResult:
         check_name="Unused EC2 Instances",
         status=Status.WARN,
         finding=f"{len(low_cpu)} instance(s) with avg CPU < 10% over 14 days: {ids}",
-        recommendation="Review instances and stop/terminate if unused. Consider Reserved Instances or Savings Plans for steady workloads.",
+        recommendation=(
+            "Review instances and stop/terminate if unused."
+            " Consider Reserved Instances or Savings Plans"
+            " for steady workloads."
+        ),
         findings=low_cpu,
     )

@@ -24,8 +24,7 @@ def run() -> CheckResult:
         )
 
     instances = [
-        db for db in response.get("DBInstances", [])
-        if db["DBInstanceStatus"] == "available"
+        db for db in response.get("DBInstances", []) if db["DBInstanceStatus"] == "available"
     ]
 
     if not instances:
@@ -72,7 +71,14 @@ def run() -> CheckResult:
     return CheckResult(
         check_name="Idle RDS Instances",
         status=Status.WARN,
-        finding=f"{len(idle)} idle RDS instance(s) with < {CONNECTION_THRESHOLD} avg connections/14d: {ids}",
-        recommendation="Stop or delete idle RDS instances. Consider Aurora Serverless for intermittent workloads.",
+        finding=(
+            f"{len(idle)} idle RDS instance(s) with"
+            f" < {CONNECTION_THRESHOLD} avg connections/14d:"
+            f" {ids}"
+        ),
+        recommendation=(
+            "Stop or delete idle RDS instances. Consider"
+            " Aurora Serverless for intermittent workloads."
+        ),
         findings=idle,
     )

@@ -12,7 +12,7 @@ def run() -> CheckResult:
     paginator = logs.get_paginator("describe_log_groups")
     try:
         for page in paginator.paginate():
-            log_groups.extend(page.get("logGroups", []))
+            log_groups.extend(page.get("logGroups", []))  # type: ignore[arg-type]
     except Exception as e:
         return CheckResult(
             check_name="CloudWatch Log Retention",
@@ -39,14 +39,23 @@ def run() -> CheckResult:
             recommendation="No action required.",
         )
 
-    findings = [Finding(lg["logGroupName"], "no retention policy (logs kept forever)") for lg in no_retention]
+    findings = [
+        Finding(lg["logGroupName"], "no retention policy (logs kept forever)")
+        for lg in no_retention
+    ]
     names = ", ".join(f.resource_id for f in findings[:5])
     suffix = f" (and {len(findings) - 5} more)" if len(findings) > 5 else ""
 
     return CheckResult(
         check_name="CloudWatch Log Retention",
         status=Status.WARN,
-        finding=f"{len(no_retention)} of {len(log_groups)} log group(s) have no retention policy: {names}{suffix}",
-        recommendation="Set a retention policy (e.g. 30–90 days) on all log groups to avoid unbounded storage costs.",
+        finding=(
+            f"{len(no_retention)} of {len(log_groups)} log group(s)"
+            f" have no retention policy: {names}{suffix}"
+        ),
+        recommendation=(
+            "Set a retention policy (e.g. 30\u201390 days) on all log groups"
+            " to avoid unbounded storage costs."
+        ),
         findings=findings,
     )

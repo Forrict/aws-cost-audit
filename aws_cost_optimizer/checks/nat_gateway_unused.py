@@ -12,9 +12,7 @@ def run() -> CheckResult:
     cw = boto3.client("cloudwatch")
 
     try:
-        response = ec2.describe_nat_gateways(
-            Filter=[{"Name": "state", "Values": ["available"]}]
-        )
+        response = ec2.describe_nat_gateways(Filters=[{"Name": "state", "Values": ["available"]}])
     except Exception as e:
         return CheckResult(
             check_name="Unused NAT Gateways",
@@ -68,6 +66,8 @@ def run() -> CheckResult:
         check_name="Unused NAT Gateways",
         status=Status.WARN,
         finding=f"{len(idle)} idle NAT Gateway(s): {ids}",
-        recommendation="Delete unused NAT Gateways to save ~$32/month per gateway plus data transfer charges.",
+        recommendation=(
+            "Delete unused NAT Gateways to save ~$32/month per gateway plus data transfer charges."
+        ),
         findings=idle,
     )

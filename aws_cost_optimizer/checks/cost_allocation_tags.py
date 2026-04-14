@@ -1,7 +1,5 @@
 """Check 15: Missing cost allocation tags on key resources."""
 
-from typing import List
-
 import boto3
 from botocore.exceptions import ClientError
 
@@ -25,7 +23,7 @@ def run() -> CheckResult:
     ec2 = boto3.client("ec2")
     rds = boto3.client("rds")
 
-    untagged: List[Finding] = []
+    untagged: list[Finding] = []
     total = 0
 
     # EC2 instances
@@ -45,8 +43,8 @@ def run() -> CheckResult:
 
     # RDS instances
     try:
-        response = rds.describe_db_instances()
-        for db in response.get("DBInstances", []):
+        rds_response = rds.describe_db_instances()
+        for db in rds_response.get("DBInstances", []):
             total += 1
             if not _has_cost_tags(db.get("TagList", [])):
                 untagged.append(
@@ -79,14 +77,21 @@ def run() -> CheckResult:
             check_name="Cost Allocation Tags",
             status=Status.INFO,
             finding="No EC2, RDS, or S3 resources found to evaluate.",
-            recommendation="Ensure IAM permissions include ec2:DescribeInstances, rds:DescribeDBInstances, s3:ListAllMyBuckets, s3:GetBucketTagging.",
+            recommendation=(
+                "Ensure IAM permissions include"
+                " ec2:DescribeInstances, rds:DescribeDBInstances,"
+                " s3:ListAllMyBuckets, s3:GetBucketTagging."
+            ),
         )
 
     if not untagged:
         return CheckResult(
             check_name="Cost Allocation Tags",
             status=Status.PASS,
-            finding=f"All {total} sampled resource(s) have at least one cost allocation tag ({', '.join(REQUIRED_TAG_KEYS)}).",
+            finding=(
+                f"All {total} sampled resource(s) have at least one"
+                f" cost allocation tag ({', '.join(REQUIRED_TAG_KEYS)})."
+            ),
             recommendation="No action required.",
         )
 
@@ -96,7 +101,15 @@ def run() -> CheckResult:
     return CheckResult(
         check_name="Cost Allocation Tags",
         status=Status.WARN,
-        finding=f"{len(untagged)} of {total} resource(s) ({pct:.0f}%) lack cost tags ({', '.join(REQUIRED_TAG_KEYS)}): {sample}{suffix}",
-        recommendation="Apply consistent cost allocation tags to all resources. Enable Cost Allocation Tags in Billing Console to track spending by tag.",
+        finding=(
+            f"{len(untagged)} of {total} resource(s) ({pct:.0f}%)"
+            f" lack cost tags ({', '.join(REQUIRED_TAG_KEYS)}):"
+            f" {sample}{suffix}"
+        ),
+        recommendation=(
+            "Apply consistent cost allocation tags to all"
+            " resources. Enable Cost Allocation Tags in Billing"
+            " Console to track spending by tag."
+        ),
         findings=untagged,
     )

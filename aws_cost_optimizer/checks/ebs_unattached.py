@@ -9,9 +9,7 @@ def run() -> CheckResult:
     ec2 = boto3.client("ec2")
 
     try:
-        response = ec2.describe_volumes(
-            Filters=[{"Name": "status", "Values": ["available"]}]
-        )
+        response = ec2.describe_volumes(Filters=[{"Name": "status", "Values": ["available"]}])
     except Exception as e:
         return CheckResult(
             check_name="Unattached EBS Volumes",
@@ -40,6 +38,8 @@ def run() -> CheckResult:
         check_name="Unattached EBS Volumes",
         status=Status.FAIL,
         finding=f"{len(volumes)} unattached volume(s) totalling {total_gib} GiB: {ids}",
-        recommendation="Delete volumes that are no longer needed or create snapshots before deletion.",
+        recommendation=(
+            "Delete volumes that are no longer needed or create snapshots before deletion."
+        ),
         findings=findings,
     )

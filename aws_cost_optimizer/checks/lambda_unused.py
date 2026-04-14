@@ -17,7 +17,7 @@ def run() -> CheckResult:
     paginator = lmb.get_paginator("list_functions")
     try:
         for page in paginator.paginate():
-            functions.extend(page.get("Functions", []))
+            functions.extend(page.get("Functions", []))  # type: ignore[arg-type]
     except Exception as e:
         return CheckResult(
             check_name="Unused Lambda Functions",
@@ -70,7 +70,14 @@ def run() -> CheckResult:
     return CheckResult(
         check_name="Unused Lambda Functions",
         status=Status.WARN,
-        finding=f"{len(unused)} Lambda function(s) with no invocations in {IDLE_DAYS} days: {names}{suffix}",
-        recommendation="Delete unused Lambda functions and their associated resources (CloudWatch log groups, IAM roles, layers).",
+        finding=(
+            f"{len(unused)} Lambda function(s) with no invocations"
+            f" in {IDLE_DAYS} days: {names}{suffix}"
+        ),
+        recommendation=(
+            "Delete unused Lambda functions and their associated"
+            " resources (CloudWatch log groups, IAM roles,"
+            " layers)."
+        ),
         findings=unused,
     )

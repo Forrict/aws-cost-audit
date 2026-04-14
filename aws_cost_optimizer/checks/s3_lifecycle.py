@@ -51,6 +51,10 @@ def run() -> CheckResult:
         check_name="S3 Lifecycle Policies",
         status=Status.WARN,
         finding=f"{len(no_lifecycle)} of {len(buckets)} bucket(s) lack a lifecycle policy: {names}",
-        recommendation="Add lifecycle rules to transition objects to cheaper storage tiers (S3-IA, Glacier) and expire old objects.",
+        recommendation=(
+            "Add lifecycle rules to transition objects to"
+            " cheaper storage tiers (S3-IA, Glacier) and"
+            " expire old objects."
+        ),
         findings=no_lifecycle,
     )

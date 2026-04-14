@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List
 
 
 class Status(str, Enum):
@@ -24,4 +23,4 @@ class CheckResult:
     status: Status
     finding: str
     recommendation: str
-    findings: List[Finding] = field(default_factory=list)
+    findings: list[Finding] = field(default_factory=list)

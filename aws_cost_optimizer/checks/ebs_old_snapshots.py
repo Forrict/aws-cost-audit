@@ -21,14 +21,13 @@ def run() -> CheckResult:
             check_name="Old EBS Snapshots",
             status=Status.INFO,
             finding=f"Could not retrieve snapshots: {e}",
-            recommendation="Ensure IAM permissions include ec2:DescribeSnapshots and sts:GetCallerIdentity.",
+            recommendation=(
+                "Ensure IAM permissions include ec2:DescribeSnapshots and sts:GetCallerIdentity."
+            ),
         )
 
     cutoff = datetime.now(tz=timezone.utc) - timedelta(days=MAX_AGE_DAYS)
-    old_snaps = [
-        s for s in response.get("Snapshots", [])
-        if s["StartTime"] < cutoff
-    ]
+    old_snaps = [s for s in response.get("Snapshots", []) if s["StartTime"] < cutoff]
 
     if not old_snaps:
         return CheckResult(
@@ -48,7 +47,14 @@ def run() -> CheckResult:
     return CheckResult(
         check_name="Old EBS Snapshots",
         status=Status.WARN,
-        finding=f"{len(old_snaps)} snapshot(s) older than {MAX_AGE_DAYS} days ({total_gib} GiB total): {ids}",
-        recommendation="Review and delete snapshots that are no longer needed. Implement a lifecycle policy using AWS Data Lifecycle Manager.",
+        finding=(
+            f"{len(old_snaps)} snapshot(s) older than"
+            f" {MAX_AGE_DAYS} days ({total_gib} GiB total): {ids}"
+        ),
+        recommendation=(
+            "Review and delete snapshots that are no longer"
+            " needed. Implement a lifecycle policy using AWS"
+            " Data Lifecycle Manager."
+        ),
         findings=findings,
     )

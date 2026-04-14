@@ -53,7 +53,10 @@ def run() -> CheckResult:
                 continue
 
             # Check consumed RCU and WCU
-            for metric, cap in [("ConsumedReadCapacityUnits", read_cap), ("ConsumedWriteCapacityUnits", write_cap)]:
+            for metric, cap in [
+                ("ConsumedReadCapacityUnits", read_cap),
+                ("ConsumedWriteCapacityUnits", write_cap),
+            ]:
                 if cap == 0:
                     continue
                 metrics = cw.get_metric_statistics(
@@ -73,7 +76,7 @@ def run() -> CheckResult:
                     underused.append(
                         Finding(
                             table_name,
-                            f"{metric}: {utilization*100:.1f}% utilization (provisioned {cap})",
+                            f"{metric}: {utilization * 100:.1f}% utilization (provisioned {cap})",
                         )
                     )
                     break  # One finding per table is enough
@@ -84,7 +87,10 @@ def run() -> CheckResult:
         return CheckResult(
             check_name="Underused DynamoDB Tables",
             status=Status.PASS,
-            finding=f"No significantly underused provisioned DynamoDB tables found among {len(tables)} table(s).",
+            finding=(
+                "No significantly underused provisioned DynamoDB"
+                f" tables found among {len(tables)} table(s)."
+            ),
             recommendation="No action required.",
         )
 
@@ -92,7 +98,15 @@ def run() -> CheckResult:
     return CheckResult(
         check_name="Underused DynamoDB Tables",
         status=Status.WARN,
-        finding=f"{len(underused)} DynamoDB table(s) with < {int(UTILIZATION_THRESHOLD*100)}% capacity utilization: {names}",
-        recommendation="Switch underused tables to on-demand (PAY_PER_REQUEST) billing or reduce provisioned capacity. Enable auto-scaling.",
+        finding=(
+            f"{len(underused)} DynamoDB table(s) with"
+            f" < {int(UTILIZATION_THRESHOLD * 100)}% capacity"
+            f" utilization: {names}"
+        ),
+        recommendation=(
+            "Switch underused tables to on-demand"
+            " (PAY_PER_REQUEST) billing or reduce provisioned"
+            " capacity. Enable auto-scaling."
+        ),
         findings=underused,
     )
