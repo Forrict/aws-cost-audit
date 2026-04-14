@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import csv
+import io
+import json
 import sys
 
 from tabulate import tabulate  # type: ignore[import-untyped]
@@ -62,32 +65,37 @@ def run_checks(only: list[str] | None = None) -> list[CheckResult]:
                 recommendation="Review IAM permissions and AWS connectivity.",
             )
         results.append(result)
-        # Stream output as checks run
         status_str = result.status.value
-        print(f"  [{status_str}] {result.check_name}")
+        print(f"  [{status_str}] {result.check_name}", file=sys.stderr)
 
     return results
 
 
-def print_report(results: list[CheckResult], use_color: bool = True, verbose: bool = False) -> None:
-    print()
+def print_report(
+    results: list[CheckResult],
+    use_color: bool = True,
+    verbose: bool = False,
+    file: io.TextIOBase | None = None,
+) -> None:
+    out = file or sys.stdout
+    print(file=out)
     rows = []
     for r in results:
         status_str = _colorize(r.status.value, r.status, use_color)
         rows.append([r.check_name, status_str, r.finding, r.recommendation])
 
     headers = ["Check Name", "Status", "Finding", "Recommendation"]
-    print(tabulate(rows, headers=headers, tablefmt="simple", maxcolwidths=[30, 6, 50, 50]))
+    print(tabulate(rows, headers=headers, tablefmt="simple", maxcolwidths=[30, 6, 50, 50]), file=out)
 
     if verbose:
-        print()
+        print(file=out)
         for r in results:
             if r.findings:
-                print(f"\n--- {r.check_name} Details ---")
+                print(f"\n--- {r.check_name} Details ---", file=out)
                 for f in r.findings:
-                    print(f"  • {f.resource_id}: {f.detail}")
+                    print(f"  • {f.resource_id}: {f.detail}", file=out)
 
-    print()
+    print(file=out)
     passes = sum(1 for r in results if r.status == Status.PASS)
     warns = sum(1 for r in results if r.status == Status.WARN)
     fails = sum(1 for r in results if r.status == Status.FAIL)
@@ -102,7 +110,25 @@ def print_report(results: list[CheckResult], use_color: bool = True, verbose: bo
         summary_parts.append(_colorize(f"{fails} FAIL", Status.FAIL, use_color))
     if infos:
         summary_parts.append(_colorize(f"{infos} INFO", Status.INFO, use_color))
-    print(f"Summary: {' | '.join(summary_parts)}")
+    print(f"Summary: {' | '.join(summary_parts)}", file=out)
+
+
+def print_json(results: list[CheckResult], file: io.TextIOBase | None = None) -> None:
+    out = file or sys.stdout
+    output = {"results": [r.to_dict() for r in results]}
+    print(json.dumps(output, indent=2), file=out)
+
+
+def print_csv(results: list[CheckResult], file: io.TextIOBase | None = None) -> None:
+    out = file or sys.stdout
+    writer = csv.writer(out)
+    writer.writerow(["check_name", "status", "finding", "recommendation", "resource_id", "detail"])
+    for r in results:
+        if r.findings:
+            for f in r.findings:
+                writer.writerow([r.check_name, r.status.value, r.finding, r.recommendation, f.resource_id, f.detail])
+        else:
+            writer.writerow([r.check_name, r.status.value, r.finding, r.recommendation, "", ""])
 
 
 def main() -> None:
@@ -120,7 +146,23 @@ def main() -> None:
         help="Run only specific checks (module names, e.g. ebs_unattached ec2_unused)",
     )
     parser.add_argument("--list-checks", action="store_true", help="List available checks and exit")
+    parser.add_argument(
+        "--output", "-o",
+        choices=["table", "json", "csv"],
+        default="table",
+        help="Output format (default: table)",
+    )
+    parser.add_argument(
+        "--output-file", "-f",
+        metavar="FILE",
+        help="Write report to FILE (default: cost-report.<format> for json/csv)",
+    )
     args = parser.parse_args()
+
+    # Default output file for json/csv when -f is not given
+    DEFAULT_OUTPUT_FILES = {"json": "cost-report.json", "csv": "cost-report.csv"}
+    if args.output_file is None and args.output in DEFAULT_OUTPUT_FILES:
+        args.output_file = DEFAULT_OUTPUT_FILES[args.output]
 
     if args.list_checks:
         print("Available checks:")
@@ -130,9 +172,25 @@ def main() -> None:
 
     use_color = not args.no_color and sys.stdout.isatty()
 
-    print(f"aws-cost-optimizer {__version__} — running checks...\n")
+    print(f"aws-cost-optimizer {__version__} — running checks...\n", file=sys.stderr)
     results = run_checks(only=args.checks)
-    print_report(results, use_color=use_color, verbose=args.verbose)
+
+    outfile = open(args.output_file, "w") if args.output_file else None
+    try:
+        if args.output == "json":
+            print_json(results, file=outfile)
+        elif args.output == "csv":
+            print_csv(results, file=outfile)
+        else:
+            # Disable color when writing to file
+            file_color = use_color if outfile is None else False
+            print_report(results, use_color=file_color, verbose=args.verbose, file=outfile)
+    finally:
+        if outfile:
+            outfile.close()
+
+    if args.output_file:
+        print(f"\nReport written to {args.output_file}", file=sys.stderr)
 
     # Exit code: 0 = all pass/info, 1 = any warn/fail
     has_issues = any(r.status in (Status.WARN, Status.FAIL) for r in results)

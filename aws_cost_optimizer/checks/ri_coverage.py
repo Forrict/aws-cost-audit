@@ -56,25 +56,28 @@ def run() -> CheckResult:
         )
 
     findings = []
-    worst_pct = 100.0
     if sp_coverage_pct is not None:
         findings.append(Finding("SavingsPlans", f"{sp_coverage_pct:.1f}% coverage (last 30 days)"))
-        worst_pct = min(worst_pct, sp_coverage_pct)
     if ri_coverage_pct is not None:
         findings.append(
             Finding("ReservedInstances", f"{ri_coverage_pct:.1f}% coverage (last 30 days)")
         )
-        worst_pct = min(worst_pct, ri_coverage_pct)
 
-    if worst_pct >= 70:
+    # Use the BEST (max) of SP or RI coverage, because you cannot combine
+    # Savings Plans and Reserved Instances on the same resource — either one
+    # covering the spend is sufficient.
+    available = [p for p in (sp_coverage_pct, ri_coverage_pct) if p is not None]
+    best_pct = max(available) if available else 0.0
+
+    if best_pct >= 70:
         status = Status.PASS
         rec = "Coverage looks healthy. Review annually to ensure commitments still match usage."
-    elif worst_pct >= 40:
+    elif best_pct >= 20:
         status = Status.WARN
         rec = (
-            "Consider purchasing additional Reserved Instances"
-            " or Savings Plans for predictable workloads."
-            " Savings of 30\u201372% over On-Demand."
+            "Moderate commitment coverage. Consider purchasing"
+            " additional Reserved Instances or Savings Plans"
+            " for predictable workloads. Savings of 30\u201372% over On-Demand."
         )
     else:
         status = Status.FAIL
