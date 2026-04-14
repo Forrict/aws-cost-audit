@@ -85,7 +85,8 @@ def print_report(
         rows.append([r.check_name, status_str, r.finding, r.recommendation])
 
     headers = ["Check Name", "Status", "Finding", "Recommendation"]
-    print(tabulate(rows, headers=headers, tablefmt="simple", maxcolwidths=[30, 6, 50, 50]), file=out)
+    table = tabulate(rows, headers=headers, tablefmt="simple", maxcolwidths=[30, 6, 50, 50])
+    print(table, file=out)
 
     if verbose:
         print(file=out)
@@ -126,9 +127,13 @@ def print_csv(results: list[CheckResult], file: io.TextIOBase | None = None) -> 
     for r in results:
         if r.findings:
             for f in r.findings:
-                writer.writerow([r.check_name, r.status.value, r.finding, r.recommendation, f.resource_id, f.detail])
+                row = [r.check_name, r.status.value, r.finding,
+                       r.recommendation, f.resource_id, f.detail]
+                writer.writerow(row)
         else:
-            writer.writerow([r.check_name, r.status.value, r.finding, r.recommendation, "", ""])
+            row = [r.check_name, r.status.value, r.finding,
+                   r.recommendation, "", ""]
+            writer.writerow(row)
 
 
 def main() -> None:
