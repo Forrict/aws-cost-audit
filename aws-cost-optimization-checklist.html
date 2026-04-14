@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS Cost Optimization Checklist — Forrict</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --dark-blue:  #223A6F;
+    --green:      #44B282;
+    --green-dark: #2D8A5F;
+    --gray:       #F5F5F5;
+    --white:      #FFFFFF;
+    --text:       #1A1A2E;
+    --text-muted: #5A6A8A;
+  }
+
+  html { font-size: 14px; }
+
+  body {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    color: var(--text);
+    background: var(--white);
+    line-height: 1.55;
+  }
+
+  /* ── Page Anatomy ── */
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--white);
+  }
+
+  @media screen {
+    .page {
+      box-shadow: 0 4px 32px rgba(34,58,111,.12);
+      margin: 2rem auto;
+      border-radius: 4px;
+    }
+  }
+
+  @media print {
+    .page { page-break-after: always; margin: 0; box-shadow: none; }
+    .page:last-child { page-break-after: avoid; }
+    @page { size: A4; margin: 0; }
+  }
+
+  /* ── COVER PAGE ── */
+  .cover {
+    background: var(--dark-blue);
+    min-height: 297mm;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cover-header {
+    padding: 40px 48px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo-wordmark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.02em;
+  }
+
+  .logo-text span { color: var(--green); }
+
+  .cover-badge {
+    background: var(--green);
+    color: var(--white);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  .cover-hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 56px 48px;
+  }
+
+  .cover-eyebrow {
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 16px;
+  }
+
+  .cover-title {
+    font-size: 3.2rem;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.1;
+    letter-spacing: -.03em;
+    margin-bottom: 24px;
+  }
+
+  .cover-title em {
+    color: var(--green);
+    font-style: normal;
+  }
+
+  .cover-subtitle {
+    font-size: 1.05rem;
+    color: rgba(255,255,255,.7);
+    max-width: 440px;
+    margin-bottom: 48px;
+    font-weight: 400;
+  }
+
+  .cover-stats {
+    display: flex;
+    gap: 32px;
+  }
+
+  .stat {
+    border-left: 3px solid var(--green);
+    padding-left: 16px;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: .75rem;
+    color: rgba(255,255,255,.55);
+    font-weight: 500;
+    margin-top: 4px;
+    letter-spacing: .04em;
+  }
+
+  .cover-graphic {
+    padding: 0 48px;
+    margin-top: auto;
+    margin-bottom: 0;
+  }
+
+  .cover-graphic svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .cover-footer {
+    background: rgba(0,0,0,.2);
+    padding: 18px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .cover-footer-text {
+    font-size: .72rem;
+    color: rgba(255,255,255,.45);
+  }
+
+  .cover-footer-url {
+    font-size: .72rem;
+    color: var(--green);
+    font-weight: 600;
+  }
+
+  /* ── CONTENT PAGES ── */
+  .content-page {
+    min-height: 297mm;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .page-header {
+    background: var(--dark-blue);
+    padding: 18px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .page-header-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .page-header-logo .logo-text {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--white);
+  }
+
+  .page-header-title {
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.55);
+  }
+
+  .page-header-num {
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--green);
+  }
+
+  .page-body {
+    flex: 1;
+    padding: 32px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .section-label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: -8px;
+  }
+
+  /* ── CHECK CARD ── */
+  .check-card {
+    border-radius: 6px;
+    border: 1.5px solid #E8EDF5;
+    overflow: hidden;
+    display: flex;
+  }
+
+  .check-card-accent {
+    width: 4px;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+
+  .check-card-inner {
+    flex: 1;
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 8px 24px;
+  }
+
+  .check-card-header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .check-num {
+    background: var(--dark-blue);
+    color: var(--white);
+    font-size: .65rem;
+    font-weight: 700;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .check-name {
+    font-size: .92rem;
+    font-weight: 700;
+    color: var(--dark-blue);
+    letter-spacing: -.01em;
+  }
+
+  .check-savings {
+    margin-left: auto;
+    background: #EBF9F2;
+    border: 1px solid #B8E8CE;
+    color: var(--green-dark);
+    font-size: .65rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .check-col-label {
+    font-size: .63rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+
+  .check-col-text {
+    font-size: .78rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  /* ── DIVIDER PAGE BAND ── */
+  .divider-band {
+    background: var(--gray);
+    border-top: 2px solid #E0E7EF;
+    border-bottom: 2px solid #E0E7EF;
+    padding: 8px 40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .divider-band-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+
+  .divider-band-text {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  /* ── PAGE FOOTER ── */
+  .page-footer {
+    background: var(--dark-blue);
+    padding: 10px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .page-footer-left {
+    font-size: .65rem;
+    color: rgba(255,255,255,.4);
+  }
+
+  .page-footer-right {
+    font-size: .65rem;
+    color: var(--green);
+    font-weight: 600;
+  }
+
+  /* ── CTA PAGE ── */
+  .cta-page {
+    background: var(--dark-blue);
+    min-height: 297mm;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cta-header {
+    background: rgba(0,0,0,.2);
+    padding: 18px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .cta-body {
+    flex: 1;
+    padding: 64px 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .cta-eyebrow {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 18px;
+  }
+
+  .cta-title {
+    font-size: 2.6rem;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.12;
+    letter-spacing: -.03em;
+    margin-bottom: 24px;
+  }
+
+  .cta-title em { color: var(--green); font-style: normal; }
+
+  .cta-description {
+    font-size: 1rem;
+    color: rgba(255,255,255,.7);
+    max-width: 480px;
+    margin-bottom: 48px;
+    line-height: 1.6;
+  }
+
+  .cta-actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 64px;
+  }
+
+  .btn-primary {
+    background: var(--green);
+    color: var(--white);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: .88rem;
+    font-weight: 700;
+    padding: 14px 28px;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: -.01em;
+  }
+
+  .btn-secondary {
+    background: rgba(255,255,255,.1);
+    border: 1.5px solid rgba(255,255,255,.25);
+    color: var(--white);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: .88rem;
+    font-weight: 600;
+    padding: 14px 28px;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cta-divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,.12);
+    margin-bottom: 40px;
+  }
+
+  .cta-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  .cta-card {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 8px;
+    padding: 20px;
+  }
+
+  .cta-card-icon {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+  }
+
+  .cta-card-title {
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+
+  .cta-card-text {
+    font-size: .72rem;
+    color: rgba(255,255,255,.55);
+    line-height: 1.5;
+  }
+
+  .cta-footer {
+    background: rgba(0,0,0,.25);
+    padding: 18px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .cta-footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cta-footer-text {
+    font-size: .68rem;
+    color: rgba(255,255,255,.4);
+  }
+
+  .cta-footer-url {
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--green);
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE 1: COVER                                  -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page cover">
+
+  <div class="cover-header">
+    <div class="logo-wordmark">
+      <!-- Forrict logo mark (geometric F) -->
+      <svg class="logo-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="36" height="36" rx="6" fill="#44B282"/>
+        <path d="M10 10h16v4H14v4h10v4H14v8h-4V10z" fill="white"/>
+      </svg>
+      <span class="logo-text">forr<span>ict</span></span>
+    </div>
+    <span class="cover-badge">Free Resource</span>
+  </div>
+
+  <div class="cover-hero">
+    <div class="cover-eyebrow">AWS FinOps · Cost Optimization</div>
+    <h1 class="cover-title">
+      15 Ways to Stop<br>
+      <em>Wasting Money</em><br>
+      on AWS
+    </h1>
+    <p class="cover-subtitle">
+      A practical checklist for engineering and finance teams ready to take control of their cloud spend — no consultants required (though we're here if you need us).
+    </p>
+    <div class="cover-stats">
+      <div class="stat">
+        <div class="stat-value">15</div>
+        <div class="stat-label">Actionable checks</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">30%</div>
+        <div class="stat-label">Typical waste in cloud bills</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">72%</div>
+        <div class="stat-label">Max savings with commitments</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decorative wave graphic -->
+  <div class="cover-graphic">
+    <svg viewBox="0 0 580 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="60" width="580" height="1" stroke="rgba(68,178,130,0.2)"/>
+      <rect x="0" y="80" width="580" height="1" stroke="rgba(68,178,130,0.1)"/>
+      <rect x="0" y="100" width="580" height="1" stroke="rgba(68,178,130,0.07)"/>
+      <!-- Chip shapes -->
+      <rect x="20" y="24" width="80" height="32" rx="4" fill="rgba(68,178,130,0.08)" stroke="rgba(68,178,130,0.25)" stroke-width="1"/>
+      <rect x="116" y="24" width="56" height="32" rx="4" fill="rgba(68,178,130,0.05)" stroke="rgba(68,178,130,0.15)" stroke-width="1"/>
+      <rect x="188" y="24" width="100" height="32" rx="4" fill="rgba(68,178,130,0.08)" stroke="rgba(68,178,130,0.25)" stroke-width="1"/>
+      <rect x="304" y="24" width="64" height="32" rx="4" fill="rgba(68,178,130,0.04)" stroke="rgba(68,178,130,0.15)" stroke-width="1"/>
+      <rect x="384" y="24" width="80" height="32" rx="4" fill="rgba(68,178,130,0.07)" stroke="rgba(68,178,130,0.2)" stroke-width="1"/>
+      <rect x="480" y="24" width="80" height="32" rx="4" fill="rgba(68,178,130,0.05)" stroke="rgba(68,178,130,0.15)" stroke-width="1"/>
+      <!-- Labels inside chips -->
+      <text x="60" y="45" font-family="Space Grotesk, sans-serif" font-size="9" fill="rgba(68,178,130,0.7)" text-anchor="middle" font-weight="600">EC2</text>
+      <text x="144" y="45" font-family="Space Grotesk, sans-serif" font-size="9" fill="rgba(68,178,130,0.5)" text-anchor="middle" font-weight="600">EBS</text>
+      <text x="238" y="45" font-family="Space Grotesk, sans-serif" font-size="9" fill="rgba(68,178,130,0.7)" text-anchor="middle" font-weight="600">RDS</text>
+      <text x="336" y="45" font-family="Space Grotesk, sans-serif" font-size="9" fill="rgba(68,178,130,0.5)" text-anchor="middle" font-weight="600">S3</text>
+      <text x="424" y="45" font-family="Space Grotesk, sans-serif" font-size="9" fill="rgba(68,178,130,0.6)" text-anchor="middle" font-weight="600">Lambda</text>
+      <text x="520" y="45" font-family="Space Grotesk, sans-serif" font-size="9" fill="rgba(68,178,130,0.5)" text-anchor="middle" font-weight="600">NAT GW</text>
+      <!-- Connecting lines -->
+      <line x1="100" y1="40" x2="116" y2="40" stroke="rgba(68,178,130,0.2)" stroke-width="1"/>
+      <line x1="172" y1="40" x2="188" y2="40" stroke="rgba(68,178,130,0.2)" stroke-width="1"/>
+      <line x1="288" y1="40" x2="304" y2="40" stroke="rgba(68,178,130,0.2)" stroke-width="1"/>
+      <line x1="368" y1="40" x2="384" y2="40" stroke="rgba(68,178,130,0.2)" stroke-width="1"/>
+      <line x1="464" y1="40" x2="480" y2="40" stroke="rgba(68,178,130,0.2)" stroke-width="1"/>
+    </svg>
+  </div>
+
+  <div class="cover-footer">
+    <span class="cover-footer-text">© 2025 Forrict · AWS Select Tier Partner · forrict.nl</span>
+    <span class="cover-footer-url">github.com/FonsBiemans/aws-cost-optimizer</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE 2: CHECKS 1–5                             -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-header-logo">
+      <svg width="22" height="22" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="36" height="36" rx="6" fill="#44B282"/>
+        <path d="M10 10h16v4H14v4h10v4H14v8h-4V10z" fill="white"/>
+      </svg>
+      <span class="logo-text" style="font-size:.9rem; color:white; font-weight:700;">forrict</span>
+    </div>
+    <span class="page-header-title">AWS Cost Optimization Checklist</span>
+    <span class="page-header-num">Checks 1–5 of 15</span>
+  </div>
+
+  <div class="page-body">
+
+    <div class="divider-band">
+      <div class="divider-band-dot"></div>
+      <span class="divider-band-text">Compute &amp; Storage</span>
+    </div>
+
+    <!-- Check 1 -->
+    <div class="check-card">
+      <div class="check-card-accent"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num">1</div>
+          <span class="check-name">Unused EC2 Instances</span>
+          <span class="check-savings">$50–$500/mo per instance</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">Running instances with average CPU utilization below 10% over the past 14 days — a strong signal the instance is idle or massively over-provisioned.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">EC2 instances incur hourly charges regardless of utilization. Even a single unused m5.large costs ~$70/month. Multiply that across a team and the waste compounds fast.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check 2 -->
+    <div class="check-card">
+      <div class="check-card-accent"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num">2</div>
+          <span class="check-name">Unattached EBS Volumes</span>
+          <span class="check-savings">$5–$50/mo per volume</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">EBS volumes in "available" state — not attached to any EC2 instance. These are created when instances are terminated without deleting their storage.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">Unattached EBS volumes incur storage charges ($0.08–$0.10/GB/month for gp2/gp3). They accumulate silently after instance terminations and are often forgotten.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check 3 -->
+    <div class="check-card">
+      <div class="check-card-accent"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num">3</div>
+          <span class="check-name">Old EBS Snapshots (&gt;90 days)</span>
+          <span class="check-savings">$10–$200/mo</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">EBS snapshots older than 90 days owned by your account, especially where the source volume or instance no longer exists.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">EBS snapshots are billed at $0.05/GB/month. Hundreds of stale snapshots from automated backups or manual experiments accumulate unnoticed — until the bill arrives.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check 4 -->
+    <div class="check-card">
+      <div class="check-card-accent"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num">4</div>
+          <span class="check-name">Idle Load Balancers</span>
+          <span class="check-savings">$16–$40/mo per LB</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">ALBs and NLBs with no healthy targets or zero request traffic over the past 7 days. Typically represent forgotten infrastructure from retired services.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">Each ALB costs ~$16–$20/month in fixed hourly charges even with zero traffic. Idle load balancers provide no value while quietly consuming budget.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check 5 -->
+    <div class="check-card">
+      <div class="check-card-accent"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num">5</div>
+          <span class="check-name">Unattached Elastic IPs</span>
+          <span class="check-savings">$3–$36/mo per EIP</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">Elastic IP addresses that are allocated but not associated with a running EC2 instance or NAT Gateway. AWS charges for EIPs that are not in use.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">AWS charges ~$0.005/hour (~$3.60/month) for each unattached EIP. While small individually, organizations often accumulate many forgotten EIPs over time.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="page-footer">
+    <span class="page-footer-left">forrict.nl · AWS Select Tier Partner</span>
+    <span class="page-footer-right">2 / 5</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE 3: CHECKS 6–10                            -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-header-logo">
+      <svg width="22" height="22" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="36" height="36" rx="6" fill="#44B282"/>
+        <path d="M10 10h16v4H14v4h10v4H14v8h-4V10z" fill="white"/>
+      </svg>
+      <span class="logo-text" style="font-size:.9rem; color:white; font-weight:700;">forrict</span>
+    </div>
+    <span class="page-header-title">AWS Cost Optimization Checklist</span>
+    <span class="page-header-num">Checks 6–10 of 15</span>
+  </div>
+
+  <div class="page-body">
+
+    <div class="divider-band">
+      <div class="divider-band-dot"></div>
+      <span class="divider-band-text">Right-sizing &amp; Commitments</span>
+    </div>
+
+    <!-- Check 6 -->
+    <div class="check-card">
+      <div class="check-card-accent"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num">6</div>
+          <span class="check-name">Oversized EC2 Instances</span>
+          <span class="check-savings">30–60% of instance cost</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">Running instances with average CPU below 20% over 14 days — candidates for downsizing to a smaller instance type within the same family.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">Right-sizing is one of the highest-ROI FinOps actions. Moving from m5.2xlarge to m5.xlarge halves compute cost with zero architecture changes required.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check 7 -->
+    <div class="check-card">
+      <div class="check-card-accent"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num">7</div>
+          <span class="check-name">RI / Savings Plan Coverage</span>
+          <span class="check-savings">30–72% of compute spend</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">Percentage of eligible compute spend covered by Reserved Instances or Savings Plans over the past 30 days. Low coverage = paying full On-Demand prices.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">On-Demand pricing carries a 40–72% premium over RIs and Savings Plans for steady-state workloads. Often the single largest optimization opportunity for mature AWS environments.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check 8 -->
+    <div class="check-card">
+      <div class="check-card-accent"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num">8</div>
+          <span class="check-name">S3 Without Lifecycle Policies</span>
+          <span class="check-savings">20–90% of S3 storage costs</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">S3 buckets without lifecycle configurations that transition objects to cheaper storage classes (S3-IA, Glacier) or expire old objects automatically.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">Without lifecycle policies, S3 objects accumulate indefinitely at S3 Standard pricing. S3-IA saves 45%; Glacier saves up to 90% on aged data that is rarely accessed.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check 9 -->
+    <div class="check-card">
+      <div class="check-card-accent"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num">9</div>
+          <span class="check-name">Unused NAT Gateways</span>
+          <span class="check-savings">$32–$100/mo per gateway</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">NAT Gateways with zero outbound bytes over the past 7 days — likely leftover from decommissioned workloads in private subnets.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">Each NAT Gateway costs $0.045/hour (~$32/month) plus $0.045/GB processed. Idle NAT Gateways deliver zero value and are commonly left running after services are retired.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check 10 -->
+    <div class="check-card">
+      <div class="check-card-accent"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num">10</div>
+          <span class="check-name">CloudWatch Log Retention</span>
+          <span class="check-savings">$10–$500/mo</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">CloudWatch log groups with no retention policy — meaning logs are retained indefinitely. Lambda, VPC flow, and container logs grow without bound.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">CloudWatch Logs storage costs $0.03/GB/month. High-volume log groups (Lambda, ECS) can silently accumulate hundreds of GBs with no expiry policy in place.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="page-footer">
+    <span class="page-footer-left">forrict.nl · AWS Select Tier Partner</span>
+    <span class="page-footer-right">3 / 5</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE 4: CHECKS 11–15                           -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-header-logo">
+      <svg width="22" height="22" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="36" height="36" rx="6" fill="#44B282"/>
+        <path d="M10 10h16v4H14v4h10v4H14v8h-4V10z" fill="white"/>
+      </svg>
+      <span class="logo-text" style="font-size:.9rem; color:white; font-weight:700;">forrict</span>
+    </div>
+    <span class="page-header-title">AWS Cost Optimization Checklist</span>
+    <span class="page-header-num">Checks 11–15 of 15</span>
+  </div>
+
+  <div class="page-body">
+
+    <div class="divider-band">
+      <div class="divider-band-dot"></div>
+      <span class="divider-band-text">Databases, Serverless &amp; Governance</span>
+    </div>
+
+    <!-- Check 11 -->
+    <div class="check-card">
+      <div class="check-card-accent"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num">11</div>
+          <span class="check-name">Idle RDS Instances</span>
+          <span class="check-savings">$50–$500/mo per instance</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">RDS database instances with fewer than 1 average connection over 14 days. Databases with no active connections are almost certainly unused.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">RDS instances are billed by instance hour regardless of load. An idle db.t3.medium costs ~$50/month; larger instances cost hundreds per month with zero business value.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check 12 -->
+    <div class="check-card">
+      <div class="check-card-accent"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num">12</div>
+          <span class="check-name">Previous-Generation Instance Types</span>
+          <span class="check-savings">20–40% of instance cost</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">EC2 instances running on previous-generation families (t1, m1, m2, m3, c1, c3, r3, i2, g2) superseded by newer, better-priced generations.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">Previous-gen instances are often 20–40% more expensive than current-gen equivalents while delivering less performance. AWS no longer prioritizes price optimization for these types.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check 13 -->
+    <div class="check-card">
+      <div class="check-card-accent"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num">13</div>
+          <span class="check-name">Unused Lambda Functions</span>
+          <span class="check-savings">Indirect — log storage &amp; ops</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">Lambda functions with zero invocations over the past 30 days. These dormant functions are candidates for cleanup and operational simplification.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">While Lambda is cheap at rest, unused functions carry overhead: associated IAM roles, CloudWatch log groups (which incur storage costs), and ongoing maintenance burden.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check 14 -->
+    <div class="check-card">
+      <div class="check-card-accent"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num">14</div>
+          <span class="check-name">Underused DynamoDB Tables</span>
+          <span class="check-savings">30–80% of DynamoDB costs</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">Provisioned DynamoDB tables using less than 20% of their provisioned read or write capacity over 7 days — paying for capacity they do not need.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">Provisioned DynamoDB capacity is charged whether used or not. Switching to on-demand billing or reducing provisioned units directly aligns cost with actual usage patterns.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Check 15 -->
+    <div class="check-card">
+      <div class="check-card-accent" style="background: var(--green-dark);"></div>
+      <div class="check-card-inner">
+        <div class="check-card-header">
+          <div class="check-num" style="background: var(--green-dark);">15</div>
+          <span class="check-name">Missing Cost Allocation Tags</span>
+          <span class="check-savings">Indirect — billing visibility</span>
+        </div>
+        <div>
+          <div class="check-col-label">What to look for</div>
+          <div class="check-col-text">EC2 instances, RDS databases, and S3 buckets missing common cost allocation tags: <strong>Environment</strong>, <strong>Project</strong>, <strong>Owner</strong>, <strong>CostCenter</strong>.</div>
+        </div>
+        <div>
+          <div class="check-col-label">Why it matters</div>
+          <div class="check-col-text">Without cost allocation tags, it is impossible to attribute cloud spend to teams, products, or cost centers. This creates billing blind spots and prevents effective FinOps governance at scale.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="page-footer">
+    <span class="page-footer-left">forrict.nl · AWS Select Tier Partner</span>
+    <span class="page-footer-right">4 / 5</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE 5: CTA                                    -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page cta-page">
+
+  <div class="cta-header">
+    <div class="logo-wordmark">
+      <svg width="28" height="28" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="36" height="36" rx="6" fill="#44B282"/>
+        <path d="M10 10h16v4H14v4h10v4H14v8h-4V10z" fill="white"/>
+      </svg>
+      <span class="logo-text" style="font-size:1.1rem; color:white; font-weight:700;">forr<span style="color:#44B282;">ict</span></span>
+    </div>
+    <span style="font-size:.68rem; color:rgba(255,255,255,.4);">AWS Select Tier Partner · forrict.nl</span>
+  </div>
+
+  <div class="cta-body">
+    <div class="cta-eyebrow">Want to go further?</div>
+    <h2 class="cta-title">
+      Book a free<br>
+      <em>FinOps consultation</em><br>
+      with Forrict
+    </h2>
+    <p class="cta-description">
+      We help engineering teams and finance leaders get real control over AWS cloud costs — from quick wins to long-term governance. No fluff, no vendor lock-in. Just honest advice from people who've done it before.
+    </p>
+
+    <div class="cta-actions">
+      <a href="https://forrict.nl" class="btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Book your free session
+      </a>
+      <a href="https://github.com/FonsBiemans/aws-cost-optimizer" class="btn-secondary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        View the open-source tool
+      </a>
+    </div>
+
+    <hr class="cta-divider">
+
+    <div class="cta-cards">
+      <div class="cta-card">
+        <div class="cta-card-icon">🔍</div>
+        <div class="cta-card-title">FinOps Review</div>
+        <div class="cta-card-text">We audit your AWS bill and surface the biggest savings opportunities with a prioritized action plan.</div>
+      </div>
+      <div class="cta-card">
+        <div class="cta-card-icon">🏗️</div>
+        <div class="cta-card-title">Landing Zones &amp; Governance</div>
+        <div class="cta-card-text">Set up cost allocation, tagging policy, and budget guardrails that scale with your organization.</div>
+      </div>
+      <div class="cta-card">
+        <div class="cta-card-icon">📊</div>
+        <div class="cta-card-title">Managed AWS</div>
+        <div class="cta-card-text">Ongoing optimization, alerting, and monthly FinOps reporting — so your team can focus on building.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-footer">
+    <div class="cta-footer-brand">
+      <span class="cta-footer-text">© 2025 Forrict B.V. · Tilburg, Netherlands</span>
+    </div>
+    <span class="cta-footer-url">github.com/FonsBiemans/aws-cost-optimizer</span>
+  </div>
+
+</div>
+
+</body>
+</html>
