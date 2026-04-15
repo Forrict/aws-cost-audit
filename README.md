@@ -59,7 +59,7 @@ pip install aws-cost-optimizer
 Or install from source:
 
 ```bash
-git clone https://github.com/FonsBiemans/aws-cost-optimizer.git
+git clone https://github.com/Forrict/aws-cost-optimizer.git
 cd aws-cost-optimizer
 pip install .
 ```
