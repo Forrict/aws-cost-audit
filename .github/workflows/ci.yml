@@ -26,10 +26,10 @@ jobs:
           pip install ".[dev]"
 
       - name: Lint with ruff
-        run: ruff check aws_cost_optimizer/
+        run: ruff check aws_cost_audit/
 
       - name: Type check with mypy
-        run: mypy aws_cost_optimizer/ --ignore-missing-imports
+        run: mypy aws_cost_audit/ --ignore-missing-imports
 
   build:
     name: Build binary
@@ -49,7 +49,7 @@ jobs:
           pip install pyinstaller
 
       - name: Build binary
-        run: pyinstaller --onefile --name aws-cost-optimizer --clean aws_cost_optimizer/cli.py
+        run: pyinstaller --onefile --name aws-cost-audit --clean aws_cost_audit/cli.py
 
       - name: Verify binary runs
-        run: ./dist/aws-cost-optimizer --version
+        run: ./dist/aws-cost-audit --version

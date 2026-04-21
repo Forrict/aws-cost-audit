@@ -2,7 +2,7 @@
 
 import boto3
 
-from aws_cost_optimizer.models import CheckResult, Finding, Status
+from aws_cost_audit.models import CheckResult, Finding, Status
 
 # Common previous-gen prefixes (t1, m1, m2, m3, c1, c3, r3, i2, hs1, g2, cr1, cc1, cc2)
 PREVIOUS_GEN_PREFIXES = (
@@ -27,9 +27,13 @@ def run() -> CheckResult:
     ec2 = boto3.client("ec2")
 
     try:
-        response = ec2.describe_instances(
+        all_instances: list[dict] = []
+        paginator = ec2.get_paginator("describe_instances")
+        for page in paginator.paginate(
             Filters=[{"Name": "instance-state-name", "Values": ["running", "stopped"]}]
-        )
+        ):
+            for reservation in page.get("Reservations", []):
+                all_instances.extend(reservation.get("Instances", []))  # type: ignore[arg-type]
     except Exception as e:
         return CheckResult(
             check_name="Previous-Generation Instance Types",
@@ -39,8 +43,7 @@ def run() -> CheckResult:
         )
 
     old_gen: list[Finding] = []
-    for reservation in response.get("Reservations", []):
-        for instance in reservation.get("Instances", []):
+    for instance in all_instances:
             itype = instance["InstanceType"]
             if any(itype.startswith(p) for p in PREVIOUS_GEN_PREFIXES):
                 old_gen.append(

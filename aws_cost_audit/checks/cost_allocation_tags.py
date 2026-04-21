@@ -3,7 +3,7 @@
 import boto3
 from botocore.exceptions import ClientError
 
-from aws_cost_optimizer.models import CheckResult, Finding, Status
+from aws_cost_audit.models import CheckResult, Finding, Status
 
 # Common cost allocation tag keys to check for
 REQUIRED_TAG_KEYS = ["Environment", "Project", "Owner", "CostCenter"]

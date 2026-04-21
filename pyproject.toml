@@ -3,15 +3,15 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "aws-cost-optimizer"
+name = "aws-cost-audit"
 version = "0.1.0"
-description = "CLI tool for AWS cost optimization checks"
+description = "CLI tool that audits your AWS account for common cost waste patterns"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Forrict", email = "hello@forrict.nl" }]
 requires-python = ">=3.9"
 dependencies = ["boto3>=1.34", "tabulate>=0.9"]
-keywords = ["aws", "cost", "finops", "optimization", "cloud"]
+keywords = ["aws", "cost", "finops", "audit", "cloud"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -26,19 +26,19 @@ classifiers = [
 ]
 
 [project.scripts]
-aws-cost-optimizer = "aws_cost_optimizer.cli:main"
+aws-cost-audit = "aws_cost_audit.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/Forrict/aws-cost-optimizer"
-Repository = "https://github.com/Forrict/aws-cost-optimizer"
-Issues = "https://github.com/Forrict/aws-cost-optimizer/issues"
+Homepage = "https://github.com/Forrict/aws-cost-audit"
+Repository = "https://github.com/Forrict/aws-cost-audit"
+Issues = "https://github.com/Forrict/aws-cost-audit/issues"
 
 [project.optional-dependencies]
 dev = ["ruff>=0.4", "mypy>=1.10", "boto3-stubs[ec2,s3,rds,cloudwatch,elbv2,lambda,dynamodb,logs,iam,ce]>=1.34"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["aws_cost_optimizer*"]
+include = ["aws_cost_audit*"]
 
 [tool.ruff]
 line-length = 100

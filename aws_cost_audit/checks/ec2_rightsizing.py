@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 import boto3
 
-from aws_cost_optimizer.models import CheckResult, Finding, Status
+from aws_cost_audit.models import CheckResult, Finding, Status
 
 CPU_THRESHOLD = 20.0  # percent average over 14 days
 
@@ -14,9 +14,14 @@ def run() -> CheckResult:
     cw = boto3.client("cloudwatch")
 
     try:
-        response = ec2.describe_instances(
+        instances: list[dict] = []
+        paginator = ec2.get_paginator("describe_instances")
+        for page in paginator.paginate(
             Filters=[{"Name": "instance-state-name", "Values": ["running"]}]
-        )
+        ):
+            for reservation in page.get("Reservations", []):
+                for instance in reservation.get("Instances", []):
+                    instances.append(instance)  # type: ignore[arg-type]
     except Exception as e:
         return CheckResult(
             check_name="Oversized EC2 Instances",
@@ -24,11 +29,6 @@ def run() -> CheckResult:
             finding=f"Could not retrieve EC2 instances: {e}",
             recommendation="Ensure IAM permissions include ec2:DescribeInstances.",
         )
-
-    instances: list[dict] = []
-    for reservation in response.get("Reservations", []):
-        for instance in reservation.get("Instances", []):
-            instances.append(instance)  # type: ignore[arg-type]
 
     if not instances:
         return CheckResult(

@@ -2,7 +2,7 @@
 
 import boto3
 
-from aws_cost_optimizer.models import CheckResult, Finding, Status
+from aws_cost_audit.models import CheckResult, Finding, Status
 
 
 def run() -> CheckResult:
