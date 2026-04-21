@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 import boto3
 
-from aws_cost_optimizer.models import CheckResult, Finding, Status
+from aws_cost_audit.models import CheckResult, Finding, Status
 
 
 def run() -> CheckResult:
@@ -12,7 +12,10 @@ def run() -> CheckResult:
     cw = boto3.client("cloudwatch")
 
     try:
-        lb_response = elbv2.describe_load_balancers()
+        load_balancers: list[dict] = []
+        paginator = elbv2.get_paginator("describe_load_balancers")
+        for page in paginator.paginate():
+            load_balancers.extend(page.get("LoadBalancers", []))  # type: ignore[arg-type]
     except Exception as e:
         return CheckResult(
             check_name="Idle Load Balancers",
@@ -22,8 +25,6 @@ def run() -> CheckResult:
                 "Ensure IAM permissions include elasticloadbalancing:DescribeLoadBalancers."
             ),
         )
-
-    load_balancers = lb_response.get("LoadBalancers", [])
     if not load_balancers:
         return CheckResult(
             check_name="Idle Load Balancers",

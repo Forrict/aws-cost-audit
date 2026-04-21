@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 import boto3
 
-from aws_cost_optimizer.models import CheckResult, Finding, Status
+from aws_cost_audit.models import CheckResult, Finding, Status
 
 
 def run() -> CheckResult:
@@ -12,9 +12,14 @@ def run() -> CheckResult:
     cw = boto3.client("cloudwatch")
 
     try:
-        response = ec2.describe_instances(
+        instances: list[str] = []
+        paginator = ec2.get_paginator("describe_instances")
+        for page in paginator.paginate(
             Filters=[{"Name": "instance-state-name", "Values": ["running"]}]
-        )
+        ):
+            for reservation in page.get("Reservations", []):
+                for instance in reservation.get("Instances", []):
+                    instances.append(instance["InstanceId"])
     except Exception as e:
         return CheckResult(
             check_name="Unused EC2 Instances",
@@ -26,11 +31,6 @@ def run() -> CheckResult:
                 " cloudwatch:GetMetricStatistics."
             ),
         )
-
-    instances: list[str] = []
-    for reservation in response.get("Reservations", []):
-        for instance in reservation.get("Instances", []):
-            instances.append(instance["InstanceId"])
 
     if not instances:
         return CheckResult(

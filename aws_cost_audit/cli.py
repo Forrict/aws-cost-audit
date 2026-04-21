@@ -1,8 +1,9 @@
-"""AWS Cost Optimizer CLI entry point."""
+"""AWS Cost Audit CLI entry point."""
 
 from __future__ import annotations
 
 import argparse
+import contextlib
 import csv
 import io
 import json
@@ -10,8 +11,8 @@ import sys
 
 from tabulate import tabulate  # type: ignore[import-untyped]
 
-from aws_cost_optimizer import __version__
-from aws_cost_optimizer.models import CheckResult, Status
+from aws_cost_audit import __version__
+from aws_cost_audit.models import CheckResult, Status
 
 # Registry of all checks in order
 CHECK_MODULES = [
@@ -55,7 +56,7 @@ def run_checks(only: list[str] | None = None) -> list[CheckResult]:
         if only and module_name not in only:
             continue
         try:
-            mod = importlib.import_module(f"aws_cost_optimizer.checks.{module_name}")
+            mod = importlib.import_module(f"aws_cost_audit.checks.{module_name}")
             result = mod.run()
         except Exception as e:
             result = CheckResult(
@@ -138,10 +139,10 @@ def print_csv(results: list[CheckResult], file: io.TextIOBase | None = None) -> 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        prog="aws-cost-optimizer",
-        description="Run AWS cost optimization checks against your account.",
+        prog="aws-cost-audit",
+        description="Audit your AWS account for common cost waste patterns.",
     )
-    parser.add_argument("--version", action="version", version=f"aws-cost-optimizer {__version__}")
+    parser.add_argument("--version", action="version", version=f"aws-cost-audit {__version__}")
     parser.add_argument("--no-color", action="store_true", help="Disable ANSI color output")
     parser.add_argument("--verbose", "-v", action="store_true", help="Show per-resource findings")
     parser.add_argument(
@@ -175,24 +176,29 @@ def main() -> None:
             print(f"  {module_name:<30} {description}")
         sys.exit(0)
 
+    # Validate --checks names
+    if args.checks:
+        valid_names = {name for name, _ in CHECK_MODULES}
+        invalid = [c for c in args.checks if c not in valid_names]
+        if invalid:
+            print(f"error: unknown check(s): {', '.join(invalid)}", file=sys.stderr)
+            print(f"valid checks: {', '.join(sorted(valid_names))}", file=sys.stderr)
+            sys.exit(2)
+
     use_color = not args.no_color and sys.stdout.isatty()
 
-    print(f"aws-cost-optimizer {__version__} — running checks...\n", file=sys.stderr)
+    print(f"aws-cost-audit {__version__} — running checks...\n", file=sys.stderr)
     results = run_checks(only=args.checks)
 
-    outfile = open(args.output_file, "w") if args.output_file else None
-    try:
+    with contextlib.ExitStack() as stack:
+        outfile = stack.enter_context(open(args.output_file, "w")) if args.output_file else None
         if args.output == "json":
             print_json(results, file=outfile)
         elif args.output == "csv":
             print_csv(results, file=outfile)
         else:
-            # Disable color when writing to file
             file_color = use_color if outfile is None else False
             print_report(results, use_color=file_color, verbose=args.verbose, file=outfile)
-    finally:
-        if outfile:
-            outfile.close()
 
     if args.output_file:
         print(f"\nReport written to {args.output_file}", file=sys.stderr)

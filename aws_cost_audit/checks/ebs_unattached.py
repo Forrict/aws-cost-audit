@@ -2,14 +2,19 @@
 
 import boto3
 
-from aws_cost_optimizer.models import CheckResult, Finding, Status
+from aws_cost_audit.models import CheckResult, Finding, Status
 
 
 def run() -> CheckResult:
     ec2 = boto3.client("ec2")
 
     try:
-        response = ec2.describe_volumes(Filters=[{"Name": "status", "Values": ["available"]}])
+        volumes: list[dict] = []
+        paginator = ec2.get_paginator("describe_volumes")
+        for page in paginator.paginate(
+            Filters=[{"Name": "status", "Values": ["available"]}]
+        ):
+            volumes.extend(page.get("Volumes", []))  # type: ignore[arg-type]
     except Exception as e:
         return CheckResult(
             check_name="Unattached EBS Volumes",
@@ -17,8 +22,6 @@ def run() -> CheckResult:
             finding=f"Could not retrieve EBS volumes: {e}",
             recommendation="Ensure IAM permissions include ec2:DescribeVolumes.",
         )
-
-    volumes = response.get("Volumes", [])
     if not volumes:
         return CheckResult(
             check_name="Unattached EBS Volumes",

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 import boto3
 
-from aws_cost_optimizer.models import CheckResult, Finding, Status
+from aws_cost_audit.models import CheckResult, Finding, Status
 
 MAX_AGE_DAYS = 90
 
@@ -15,7 +15,10 @@ def run() -> CheckResult:
     try:
         sts = boto3.client("sts")
         account_id = sts.get_caller_identity()["Account"]
-        response = ec2.describe_snapshots(OwnerIds=[account_id])
+        snapshots: list[dict] = []
+        paginator = ec2.get_paginator("describe_snapshots")
+        for page in paginator.paginate(OwnerIds=[account_id]):
+            snapshots.extend(page.get("Snapshots", []))  # type: ignore[arg-type]
     except Exception as e:
         return CheckResult(
             check_name="Old EBS Snapshots",
@@ -27,7 +30,7 @@ def run() -> CheckResult:
         )
 
     cutoff = datetime.now(tz=timezone.utc) - timedelta(days=MAX_AGE_DAYS)
-    old_snaps = [s for s in response.get("Snapshots", []) if s["StartTime"] < cutoff]
+    old_snaps = [s for s in snapshots if s["StartTime"] < cutoff]
 
     if not old_snaps:
         return CheckResult(

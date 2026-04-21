@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 import boto3
 
-from aws_cost_optimizer.models import CheckResult, Finding, Status
+from aws_cost_audit.models import CheckResult, Finding, Status
 
 CONNECTION_THRESHOLD = 1.0  # avg connections per datapoint
 
@@ -14,7 +14,10 @@ def run() -> CheckResult:
     cw = boto3.client("cloudwatch")
 
     try:
-        response = rds.describe_db_instances()
+        all_dbs: list[dict] = []
+        paginator = rds.get_paginator("describe_db_instances")
+        for page in paginator.paginate():
+            all_dbs.extend(page.get("DBInstances", []))  # type: ignore[arg-type]
     except Exception as e:
         return CheckResult(
             check_name="Idle RDS Instances",
@@ -23,9 +26,7 @@ def run() -> CheckResult:
             recommendation="Ensure IAM permissions include rds:DescribeDBInstances.",
         )
 
-    instances = [
-        db for db in response.get("DBInstances", []) if db["DBInstanceStatus"] == "available"
-    ]
+    instances = [db for db in all_dbs if db["DBInstanceStatus"] == "available"]
 
     if not instances:
         return CheckResult(

@@ -1,15 +1,15 @@
-# aws-cost-optimizer
+# aws-cost-audit
 
-An open-source Python CLI tool that runs AWS cost optimization checks against your account and produces a clean CLI report.
+An open-source CLI tool that audits your AWS account for common cost waste patterns and produces actionable findings.
 
 Built by [Forrict](https://forrict.nl) — AWS cloud consultancy in the Netherlands.
 
 ## What it does
 
-`aws-cost-optimizer` scans your AWS account for common cost waste patterns and produces a table of findings with actionable recommendations. Each check is self-contained and gracefully handles empty accounts.
+`aws-cost-audit` scans your AWS account for 15 common cost waste patterns and produces a table of findings with recommendations. Each check is self-contained and gracefully handles missing permissions.
 
 ```
-aws-cost-optimizer 0.1.0 — running checks...
+aws-cost-audit 0.1.0 — running checks...
 
   [PASS] Unused EC2 Instances
   [FAIL] Unattached EBS Volumes
@@ -20,9 +20,9 @@ aws-cost-optimizer 0.1.0 — running checks...
 
 Check Name                       Status   Finding                                            Recommendation
 -------------------------------  -------  -------------------------------------------------  ---------------------------------------------------
-Unused EC2 Instances             PASS     No running EC2 instances found.                   No action required.
-Unattached EBS Volumes           FAIL     3 unattached volume(s) totalling 300 GiB: ...     Delete volumes that are no longer needed.
-Old EBS Snapshots                WARN     12 snapshot(s) older than 90 days (1200 GiB)...   Implement a lifecycle policy using AWS DLM.
+Unused EC2 Instances             PASS     No running EC2 instances found.                    No action required.
+Unattached EBS Volumes           FAIL     3 unattached volume(s) totalling 300 GiB: ...      Delete volumes that are no longer needed.
+Old EBS Snapshots                WARN     12 snapshot(s) older than 90 days (1200 GiB)...    Implement a lifecycle policy using AWS DLM.
 ...
 
 Summary: 8 PASS | 4 WARN | 2 FAIL | 1 INFO
@@ -50,17 +50,41 @@ Summary: 8 PASS | 4 WARN | 2 FAIL | 1 INFO
 
 ## Installation
 
-Requires Python 3.9+ and configured AWS credentials (default profile or environment variables).
+### Pre-built binaries
+
+Download the latest binary for your platform from [GitHub Releases](https://github.com/Forrict/aws-cost-audit/releases/latest):
+
+**Linux (amd64)**
 
 ```bash
-pip install aws-cost-optimizer
+curl -Lo aws-cost-audit https://github.com/Forrict/aws-cost-audit/releases/latest/download/aws-cost-audit-linux-amd64
+chmod +x aws-cost-audit
+sudo mv aws-cost-audit /usr/local/bin/
 ```
 
-Or install from source:
+**macOS (Apple Silicon)**
 
 ```bash
-git clone https://github.com/FonsBiemans/aws-cost-optimizer.git
-cd aws-cost-optimizer
+curl -Lo aws-cost-audit https://github.com/Forrict/aws-cost-audit/releases/latest/download/aws-cost-audit-macos-arm64
+chmod +x aws-cost-audit
+sudo mv aws-cost-audit /usr/local/bin/
+```
+
+**Windows (amd64)**
+
+Download `aws-cost-audit-windows-amd64.exe` from the [releases page](https://github.com/Forrict/aws-cost-audit/releases/latest) and add it to your PATH.
+
+### pip (Python 3.9+)
+
+```bash
+pip install aws-cost-audit
+```
+
+### From source
+
+```bash
+git clone https://github.com/Forrict/aws-cost-audit.git
+cd aws-cost-audit
 pip install .
 ```
 
@@ -68,22 +92,31 @@ pip install .
 
 ```bash
 # Run all checks
-aws-cost-optimizer
+aws-cost-audit
 
 # Run with verbose per-resource output
-aws-cost-optimizer --verbose
+aws-cost-audit --verbose
 
 # Run specific checks only
-aws-cost-optimizer --checks ebs_unattached eip_unattached
+aws-cost-audit --checks ebs_unattached eip_unattached
 
 # List available checks
-aws-cost-optimizer --list-checks
+aws-cost-audit --list-checks
+
+# Output as JSON (writes to cost-report.json by default)
+aws-cost-audit --output json
+
+# Output as CSV (writes to cost-report.csv by default)
+aws-cost-audit --output csv
+
+# Write report to a specific file
+aws-cost-audit --output json --output-file my-report.json
 
 # Disable color output (useful for CI/logging)
-aws-cost-optimizer --no-color
+aws-cost-audit --no-color
 
 # Exit code: 0 = all pass, 1 = warnings or failures found
-aws-cost-optimizer && echo "All clean!" || echo "Issues found."
+aws-cost-audit && echo "All clean!" || echo "Issues found."
 ```
 
 ## Required IAM Permissions
@@ -133,19 +166,19 @@ The tool uses the default AWS credential chain (environment variables, `~/.aws/c
 export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
 export AWS_DEFAULT_REGION=eu-west-1
-aws-cost-optimizer
+aws-cost-audit
 
 # Using a named profile
-AWS_PROFILE=my-sandbox aws-cost-optimizer
+AWS_PROFILE=my-sandbox aws-cost-audit
 
 # Using AWS SSO
 aws sso login --profile my-profile
-AWS_PROFILE=my-profile aws-cost-optimizer
+AWS_PROFILE=my-profile aws-cost-audit
 ```
 
 ## Check Descriptions
 
-Detailed descriptions of each check (what it checks, why it matters, typical savings) are in [`check_descriptions.yaml`](check_descriptions.yaml). This file is used to generate the PDF checklist.
+Detailed descriptions of each check (what it checks, why it matters, typical savings) are in [`check_descriptions.yaml`](check_descriptions.yaml).
 
 ## License
 
@@ -153,4 +186,4 @@ MIT — see [LICENSE](LICENSE).
 
 ## Contributing
 
-Issues and PRs welcome. Each check lives in `aws_cost_optimizer/checks/` as a self-contained module with a single `run() -> CheckResult` function.
+Issues and PRs welcome. Each check lives in `aws_cost_audit/checks/` as a self-contained module with a single `run() -> CheckResult` function.

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 import boto3
 
-from aws_cost_optimizer.models import CheckResult, Finding, Status
+from aws_cost_audit.models import CheckResult, Finding, Status
 
 
 def run() -> CheckResult:
@@ -12,7 +12,12 @@ def run() -> CheckResult:
     cw = boto3.client("cloudwatch")
 
     try:
-        response = ec2.describe_nat_gateways(Filters=[{"Name": "state", "Values": ["available"]}])
+        gateways: list[dict] = []
+        paginator = ec2.get_paginator("describe_nat_gateways")
+        for page in paginator.paginate(
+            Filters=[{"Name": "state", "Values": ["available"]}]
+        ):
+            gateways.extend(page.get("NatGateways", []))  # type: ignore[arg-type]
     except Exception as e:
         return CheckResult(
             check_name="Unused NAT Gateways",
@@ -20,8 +25,6 @@ def run() -> CheckResult:
             finding=f"Could not retrieve NAT Gateways: {e}",
             recommendation="Ensure IAM permissions include ec2:DescribeNatGateways.",
         )
-
-    gateways = response.get("NatGateways", [])
     if not gateways:
         return CheckResult(
             check_name="Unused NAT Gateways",
